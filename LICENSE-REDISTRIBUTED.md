@@ -1,6 +1,7 @@
 # Netdata
 
 Copyright 2016-2017, Costa Tsaousis.
+Copyright 2017, Simon Nagl
 Released under [GPL v3 or later](http://www.gnu.org/licenses/gpl-3.0.en.html).
 
 ---
@@ -178,3 +179,6 @@ connectivity is not available.
     Copyright (c) 2014-2015 Benjamin Keen
     [MIT License](https://github.com/benkeen/d3pie/blob/master/LICENSE)
     
+- [Jackson](https://github.com/FasterXML/jackson-databind)
+
+    [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0)
