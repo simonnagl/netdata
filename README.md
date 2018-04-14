@@ -1,4 +1,4 @@
-# netdata [![Build Status](https://travis-ci.org/firehol/netdata.svg?branch=master)](https://travis-ci.org/firehol/netdata) [![Coverity Scan Build Status](https://scan.coverity.com/projects/9140/badge.svg)](https://scan.coverity.com/projects/firehol-netdata) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/a994873f30d045b9b4b83606c3eb3498)](https://www.codacy.com/app/netdata/netdata?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=firehol/netdata&amp;utm_campaign=Badge_Grade)  [![Code Climate](https://codeclimate.com/github/firehol/netdata/badges/gpa.svg)](https://codeclimate.com/github/firehol/netdata) [![Dependency Status](https://www.versioneye.com/user/projects/59c4ae792de28c0051996012/badge.svg?style=flat-square)](https://www.versioneye.com/user/projects/59c4ae792de28c0051996012) [![License: GPL v3+](https://img.shields.io/badge/License-GPL%20v3%2B-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+# netdata [![Build Status](https://travis-ci.org/firehol/netdata.svg?branch=master)](https://travis-ci.org/firehol/netdata) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/a994873f30d045b9b4b83606c3eb3498)](https://www.codacy.com/app/netdata/netdata?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=firehol/netdata&amp;utm_campaign=Badge_Grade) [![Code Climate](https://codeclimate.com/github/firehol/netdata/badges/gpa.svg)](https://codeclimate.com/github/firehol/netdata) [![Dependency Status](https://www.versioneye.com/user/projects/59c4ae792de28c0051996012/badge.svg?style=flat-square)](https://www.versioneye.com/user/projects/59c4ae792de28c0051996012) [![License: GPL v3+](https://img.shields.io/badge/License-GPL%20v3%2B-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 > *New to netdata? Here is a live demo: [http://my-netdata.io](http://my-netdata.io)*
 
 **netdata** is a system for **distributed real-time performance and health monitoring**.
@@ -18,9 +18,11 @@ netdata runs on **Linux**, **FreeBSD**, and **MacOS**.
 ---
 
 ## User base
+*Docker pulls*<br/>
+[![Docker titpetric/netdata Pulls](https://img.shields.io/docker/pulls/titpetric/netdata.svg?label=docker%20pulls%20titpetric/netdata)](https://hub.docker.com/r/titpetric/netdata/) [![Docker firehol/netdata Pulls](https://img.shields.io/docker/pulls/firehol/netdata.svg?label=docker%20pulls%20firehol/netdata)](https://hub.docker.com/r/firehol/netdata/)
 
 *Since May 16th 2016 (the date the [global public netdata registry](https://github.com/firehol/netdata/wiki/mynetdata-menu-item) was released):*<br/>
-[![User Base](https://registry.my-netdata.io/api/v1/badge.svg?chart=netdata.registry_entries&dimensions=persons&label=user%20base&units=null&value_color=blue&precision=0&v42)](https://registry.my-netdata.io/#menu_netdata_submenu_registry) [![Monitored Servers](https://registry.my-netdata.io/api/v1/badge.svg?chart=netdata.registry_entries&dimensions=machines&label=servers%20monitored&units=null&value_color=orange&precision=0&v42)](https://registry.my-netdata.io/#menu_netdata_submenu_registry) [![Sessions Served](https://registry.my-netdata.io/api/v1/badge.svg?chart=netdata.registry_sessions&label=sessions%20served&units=null&value_color=yellowgreen&precision=0&v42)](https://registry.my-netdata.io/#menu_netdata_submenu_registry) [![Docker Pulls](https://img.shields.io/docker/pulls/titpetric/netdata.svg)](https://hub.docker.com/r/titpetric/netdata/)
+[![User Base](https://registry.my-netdata.io/api/v1/badge.svg?chart=netdata.registry_entries&dimensions=persons&label=user%20base&units=null&value_color=blue&precision=0&v42)](https://registry.my-netdata.io/#menu_netdata_submenu_registry) [![Monitored Servers](https://registry.my-netdata.io/api/v1/badge.svg?chart=netdata.registry_entries&dimensions=machines&label=servers%20monitored&units=null&value_color=orange&precision=0&v42)](https://registry.my-netdata.io/#menu_netdata_submenu_registry) [![Sessions Served](https://registry.my-netdata.io/api/v1/badge.svg?chart=netdata.registry_sessions&label=sessions%20served&units=null&value_color=yellowgreen&precision=0&v42)](https://registry.my-netdata.io/#menu_netdata_submenu_registry)
 
 *in the last 24 hours:*<br/>
 [![New Users Today](http://registry.my-netdata.io/api/v1/badge.svg?chart=netdata.registry_entries&dimensions=persons&after=-86400&options=unaligned&group=incremental-sum&label=new%20users%20today&units=null&value_color=blue&precision=0&v42)](https://registry.my-netdata.io/#menu_netdata_submenu_registry) [![New Machines Today](https://registry.my-netdata.io/api/v1/badge.svg?chart=netdata.registry_entries&dimensions=machines&group=incremental-sum&after=-86400&options=unaligned&label=servers%20added%20today&units=null&value_color=orange&precision=0&v42)](https://registry.my-netdata.io/#menu_netdata_submenu_registry) [![Sessions Today](https://registry.my-netdata.io/api/v1/badge.svg?chart=netdata.registry_sessions&after=-86400&group=incremental-sum&options=unaligned&label=sessions%20served%20today&units=null&value_color=yellowgreen&precision=0&v42)](https://registry.my-netdata.io/#menu_netdata_submenu_registry)
@@ -29,18 +31,47 @@ netdata runs on **Linux**, **FreeBSD**, and **MacOS**.
 
 ## News
 
-`Dec 17th, 2017` - **[netdata v1.9.0 released!](https://github.com/firehol/netdata/releases)**
+`Mar 27th, 2018` - **[netdata v1.10.0 released!](https://github.com/firehol/netdata/releases)**
 
-A big release:
-
- - dashboard snapshots, for loading / saving selected time-frames
- - highlighted time-frames across all charts of the dashboard
- - IP access lists for filtering access to netdata
- - enhanced VMs and containers monitoring
- - auto-scaling of chart units
- - timezone conversion at the dashboard to allow comparing charts with server logs
- - python.d.plugin rewritten
- - dozens of more improvements, enhancements, features and compatibility fixes
+ - new web server, a lot faster and more secure
+ - updated all javascript libraries to their latest versions (fixed compatibility issues - now netdata chart can now be embedded on **Atlassian Confluence** pages and remain fully interactive!)
+ - new plugins:
+   - **BTRFS** (visualize BTRFS allocation with alarms)
+   - **bcache** (monitor hybrid setups HDD + SSD)
+   - **ceph**
+   - **nginx plus**
+   - **libreswan** (monitor the traffic of IPSEC tunnels)
+   - **traefik**
+   - **icecast**
+   - **ntpd**
+   - **httpcheck** (monitor any remote web server)
+   - **portcheck** (monitor any remote TCP port)
+   - **spring-boot** (monitor java spring-boot apps)
+   - **dnsdist**
+   - **Linux hugepages**
+ - improved plugins:
+   - **statsd**
+   - **web_log**
+   - **cgroups** for containers and VMs monitoring (netdata now supports **systemd-nspawn** and **kubernetes** - fixed security issue with `cgroup-network`)
+   - **Linux memory**
+   - **diskspace**
+   - **network interfaces**
+   - **postgres**
+   - **rabbitmq**
+   - **apps.plugin** (now it also tracks swap usage per process)
+   - **haproxy**
+   - **uptime**
+   - **ksm** (kernel memory debupper)
+   - **mdstat** (software raid)
+   - **elasticsearch**
+   - **apcupsd**
+   - **dhcpd**
+   - **fronius**
+   - **stiebeletron**
+ - new alarm notification methods
+   - **alerta**
+   - **IRC** (post on IRC channels)
+ - and dozens more improvements, enhancements, features and compatibility fixes
 
 ---
 
@@ -297,7 +328,7 @@ And you can extend it, by writing plugins that collect data from any source, usi
 This is a high level overview of netdata feature set and architecture.
 Click it to to interact with it (it has direct links to documentation).
 
-[![netdata-overview](https://user-images.githubusercontent.com/2662304/32415725-a4779606-c246-11e7-8985-2b350181aa27.png)](https://my-netdata.io/infographic.html)
+[![netdata-overview](https://user-images.githubusercontent.com/2662304/37909754-6c812a7c-3114-11e8-8673-0d1926a9793a.png)](https://my-netdata.io/infographic.html)
 
 ---
 
