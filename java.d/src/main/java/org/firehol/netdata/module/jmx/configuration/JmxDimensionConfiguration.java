@@ -18,13 +18,19 @@
 
 package org.firehol.netdata.module.jmx.configuration;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
  * Configuration scheme of a dimension of a chart created by the
  * {@link org.firehol.netdata.module.jmx.JmxModule}.
  */
+@Builder(toBuilder = true)
+@AllArgsConstructor
+@NoArgsConstructor
 @Getter
 @Setter
 public class JmxDimensionConfiguration {

@@ -2,6 +2,7 @@ package org.firehol.netdata.module.jmx.query;
 
 import java.util.Objects;
 
+import javax.management.JMX;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 
@@ -17,9 +18,9 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public abstract class MBeanQuery {
-	private ObjectName name;
+	protected ObjectName name;
 
-	private String attribute;
+	protected String attribute;
 
 	protected MBeanServerConnection mBeanServer;
 
@@ -31,4 +32,7 @@ public abstract class MBeanQuery {
 
 	public abstract void query() throws JmxMBeanServerQueryException;
 
+	public <T> T newMBeanProxy(Class<T> interfaceClass) {
+		return JMX.newMBeanProxy(mBeanServer, name, interfaceClass);
+	}
 }

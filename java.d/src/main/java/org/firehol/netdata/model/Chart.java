@@ -20,6 +20,8 @@ package org.firehol.netdata.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -100,5 +102,9 @@ public class Chart {
 
 	public boolean hasUpdateEvery() {
 		return getUpdateEvery() != null;
+	}
+
+	public Dimension getDimensionById(String id) {
+		return getAllDimension().stream().filter(d -> Objects.equals(id, d.getId())).findFirst().orElse(null);
 	}
 }

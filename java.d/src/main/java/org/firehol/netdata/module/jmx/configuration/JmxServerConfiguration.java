@@ -53,4 +53,9 @@ public class JmxServerConfiguration {
 	// This property is not part of the configuration scheme.
 	// This is a technical property used by the plugin.
 	private List<JmxChartConfiguration> charts;
+
+	@JsonIgnore
+	// This property is not part of the configuration scheme.
+	// This is a technical property used by the plugin.
+	private List<JmxThreadChartConfiguration> threadCharts;
 }

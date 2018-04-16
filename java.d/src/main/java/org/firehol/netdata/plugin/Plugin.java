@@ -40,9 +40,12 @@ public class Plugin implements Collector {
 
 	private final List<Module> modules;
 
+	private final StatefulPrinter printer;
+
 	public Plugin(int updateEveryInSeconds, List<Module> modules) {
 		this.updateEverySecond = updateEveryInSeconds;
 		this.modules = modules;
+		this.printer = new StatefulPrinter();
 	}
 
 	public void start() {
@@ -54,7 +57,7 @@ public class Plugin implements Collector {
 		try {
 			Collection<Chart> chartsToInitialize = initialize();
 			for (Chart chart : chartsToInitialize) {
-				Printer.initializeChart(chart);
+				printer.ensureChartInitialized(chart);
 			}
 		} catch (Exception e) {
 			Main.exit(LoggingUtils.buildMessage("Could not initialize. Disabling Java Plugin Daemon.", e));
@@ -90,7 +93,7 @@ public class Plugin implements Collector {
 		while (true) {
 			timeService.alignToNextInterval();
 
-			collectValues().stream().forEach(Printer::collect);
+			collectValues().stream().forEach(printer::printValues);
 		}
 	}
 

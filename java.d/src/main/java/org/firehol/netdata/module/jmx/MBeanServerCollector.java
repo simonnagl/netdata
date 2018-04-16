@@ -37,12 +37,15 @@ import org.firehol.netdata.exception.UnreachableCodeException;
 import org.firehol.netdata.model.Chart;
 import org.firehol.netdata.model.Dimension;
 import org.firehol.netdata.module.jmx.configuration.JmxChartConfiguration;
+import org.firehol.netdata.module.jmx.configuration.JmxChartConfigurationBase;
 import org.firehol.netdata.module.jmx.configuration.JmxDimensionConfiguration;
 import org.firehol.netdata.module.jmx.configuration.JmxServerConfiguration;
+import org.firehol.netdata.module.jmx.configuration.JmxThreadChartConfiguration;
 import org.firehol.netdata.module.jmx.entity.MBeanQueryDimensionMapping;
 import org.firehol.netdata.module.jmx.entity.MBeanQueryInfo;
 import org.firehol.netdata.module.jmx.exception.JmxMBeanServerQueryException;
 import org.firehol.netdata.module.jmx.query.MBeanQuery;
+import org.firehol.netdata.module.jmx.query.ThreadMXBeanQuery;
 import org.firehol.netdata.module.jmx.utils.MBeanServerUtils;
 import org.firehol.netdata.plugin.Collector;
 import org.firehol.netdata.utils.logging.LoggingUtils;
@@ -196,11 +199,41 @@ public class MBeanServerCollector implements Collector, Closeable {
 
 			allChart.add(chart);
 		}
+		// Step 2
+		// Check commonThreadChart configuration
+		if (serverConfiguration.getThreadCharts() != null && !serverConfiguration.getThreadCharts().isEmpty()) {
+			for (JmxThreadChartConfiguration threadChartConfig : serverConfiguration.getThreadCharts()) {
+
+				Chart chart = initializeChart(threadChartConfig);
+				allChart.add(chart);
+
+				ThreadMXBeanQuery threadMXBeanQuery = ThreadMXBeanQuery.getInstance(threadChartConfig.getDimensionTemplate().getValue(), mBeanServer);
+				threadMXBeanQuery.setDimensionLoader(tid -> {
+					final String id;
+					if ("${tid}".equals(threadChartConfig.getDimensionTemplate().getName())) {
+						id = String.valueOf(tid); // "name": "${tid}"
+					} else {
+						// TODO: add support for "${thread.name}"
+						throw new IllegalArgumentException("Unhandled thread chart 'name' field: " + threadChartConfig.getDimensionTemplate().getName());
+					}
+					Dimension dimension = chart.getDimensionById(id);
+					if (dimension == null) {
+						log.fine("Adding new dimension " + id + " to " + chart.getType() + "." + chart.getId());
+						JmxDimensionConfiguration threadDimension = threadChartConfig.getDimensionTemplate().toBuilder().name(id).build();
+						dimension = initializeDimension(threadChartConfig, threadDimension);
+						// dimension.setId(...);
+						chart.getAllDimension().add(dimension);
+					}
+					return dimension;
+				});
+				allMBeanQuery.add(threadMXBeanQuery);
+			}
+		}
 
 		return allChart;
 	}
 
-	protected Chart initializeChart(JmxChartConfiguration config) {
+	protected Chart initializeChart(JmxChartConfigurationBase config) {
 		Chart chart = new Chart();
 
 		chart.setType("jmx_" + serverConfiguration.getName());
@@ -217,7 +250,7 @@ public class MBeanServerCollector implements Collector, Closeable {
 		return chart;
 	}
 
-	protected Dimension initializeDimension(JmxChartConfiguration chartConfig,
+	protected Dimension initializeDimension(JmxChartConfigurationBase chartConfig,
 			JmxDimensionConfiguration dimensionConfig) {
 		Dimension dimension = new Dimension();
 		dimension.setId(dimensionConfig.getName());

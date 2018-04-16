@@ -59,4 +59,8 @@ public class Dimension {
 	public boolean hasName() {
 		return getName() != null;
 	}
+
+	public boolean hasValue() {
+		return getCurrentValue() != null;
+	}
 }
