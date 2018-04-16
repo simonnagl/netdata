@@ -1,7 +1,10 @@
 package org.firehol.netdata.module.jmx.query;
 
+import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.util.Objects;
 
+import javax.management.InstanceNotFoundException;
 import javax.management.JMX;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
@@ -32,7 +35,8 @@ public abstract class MBeanQuery {
 
 	public abstract void query() throws JmxMBeanServerQueryException;
 
-	public <T> T newMBeanProxy(Class<T> interfaceClass) {
-		return JMX.newMBeanProxy(mBeanServer, name, interfaceClass);
+	public <T> T newMXBeanProxy(Class<T> interfaceClass) throws InstanceNotFoundException, IOException {
+		boolean isEmitter = mBeanServer.isInstanceOf(name, "javax.management.NotificationEmitter");
+		return JMX.newMXBeanProxy(mBeanServer, name, interfaceClass, isEmitter);
 	}
 }

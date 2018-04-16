@@ -25,7 +25,11 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
@@ -204,33 +208,75 @@ public class MBeanServerCollector implements Collector, Closeable {
 		if (serverConfiguration.getThreadCharts() != null && !serverConfiguration.getThreadCharts().isEmpty()) {
 			for (JmxThreadChartConfiguration threadChartConfig : serverConfiguration.getThreadCharts()) {
 
-				Chart chart = initializeChart(threadChartConfig);
-				allChart.add(chart);
+				try {
+					Chart chart = initializeChart(threadChartConfig);
+					allChart.add(chart);
 
-				ThreadMXBeanQuery threadMXBeanQuery = ThreadMXBeanQuery.getInstance(threadChartConfig.getDimensionTemplate().getValue(), mBeanServer);
-				threadMXBeanQuery.setDimensionLoader(tid -> {
-					final String id;
-					if ("${tid}".equals(threadChartConfig.getDimensionTemplate().getName())) {
-						id = String.valueOf(tid); // "name": "${tid}"
-					} else {
-						// TODO: add support for "${thread.name}"
-						throw new IllegalArgumentException("Unhandled thread chart 'name' field: " + threadChartConfig.getDimensionTemplate().getName());
-					}
-					Dimension dimension = chart.getDimensionById(id);
-					if (dimension == null) {
-						log.fine("Adding new dimension " + id + " to " + chart.getType() + "." + chart.getId());
-						JmxDimensionConfiguration threadDimension = threadChartConfig.getDimensionTemplate().toBuilder().name(id).build();
-						dimension = initializeDimension(threadChartConfig, threadDimension);
-						// dimension.setId(...);
-						chart.getAllDimension().add(dimension);
-					}
-					return dimension;
-				});
-				allMBeanQuery.add(threadMXBeanQuery);
+					Predicate<String> threadNameFilter = compileThreadNameFilter(threadChartConfig);
+					Function<String, String> threadNameRewriter = compileThreadNameRewrite(threadChartConfig);
+
+					ThreadMXBeanQuery threadMXBeanQuery = ThreadMXBeanQuery.getInstance(threadChartConfig.getDimensionTemplate().getValue(), mBeanServer);
+					threadMXBeanQuery.setDimensionLoader((tid, threadName) -> {
+						if (!threadNameFilter.test(threadName)) return null; // skip excluded
+
+						threadName = threadNameRewriter.apply(threadName);
+						String dimensionName = threadChartConfig.getDimensionTemplate().getName();
+						dimensionName = dimensionName.replace("${thread.id}", String.valueOf(tid));
+						dimensionName = dimensionName.replace("${thread.name}", threadName);
+						final String dimensionId = sanitizeToDimensionId(dimensionName);
+
+						Dimension dimension = chart.getDimensionById(dimensionId);
+						if (dimension == null) {
+
+							log.fine("Adding new dimension " + dimensionName + " to " + chart.getType() + "." + chart.getId());
+							JmxDimensionConfiguration threadDimensionConfig = threadChartConfig.getDimensionTemplate().toBuilder().name(dimensionName).build();
+							dimension = initializeDimension(threadChartConfig, threadDimensionConfig);
+							dimension.setId(dimensionId);
+							chart.getAllDimension().add(dimension);
+						}
+						return dimension;
+					});
+					allMBeanQuery.add(threadMXBeanQuery);
+				} catch (Exception e) {
+					log.log(Level.SEVERE, "Failed to initialize thread chart " + threadChartConfig.getId(), e);
+				}
 			}
 		}
 
 		return allChart;
+	}
+
+	private static Function<String, String> compileThreadNameRewrite(JmxThreadChartConfiguration threadChartConfig) {
+		int flags = Pattern.DOTALL | Pattern.MULTILINE;
+		if (threadChartConfig.isNamePatternCaseInsensitive()) flags |= Pattern.CASE_INSENSITIVE;
+
+		if (StringUtils.isBlank(threadChartConfig.getRewriteNamePattern())) return name -> name;
+
+		Pattern rewriteNamePattern = Pattern.compile(threadChartConfig.getRewriteNamePattern(), flags);
+
+		final String replacement = threadChartConfig.getRewriteNamePattern() == null ? "" : threadChartConfig.getRewriteNameReplacement();
+		return name -> rewriteNamePattern.matcher(name).replaceAll(replacement);
+	}
+
+	private static Predicate<String> compileThreadNameFilter(JmxThreadChartConfiguration threadChartConfig) {
+		int flags = Pattern.DOTALL | Pattern.MULTILINE;
+		if (threadChartConfig.isNamePatternCaseInsensitive()) flags |= Pattern.CASE_INSENSITIVE;
+
+		Predicate<String> threadNameTest = name -> true;
+
+		// ... AND include
+		if (threadChartConfig.getIncludeNamePattern() != null) {
+			Pattern includeNamePattern = Pattern.compile(threadChartConfig.getIncludeNamePattern(), flags);
+			threadNameTest = threadNameTest.and(name -> includeNamePattern.matcher(name).matches());
+		}
+
+		// ... AND NOT(exclude)
+		if (threadChartConfig.getExcludeNamePattern() != null) {
+			Pattern excludeNamePattern = Pattern.compile(threadChartConfig.getExcludeNamePattern(), flags);
+			threadNameTest = threadNameTest.and(name -> !excludeNamePattern.matcher(name).matches());
+		}
+
+		return threadNameTest;
 	}
 
 	protected Chart initializeChart(JmxChartConfigurationBase config) {
@@ -302,7 +348,7 @@ public class MBeanServerCollector implements Collector, Closeable {
 				queryInfo.query();
 			} catch (JmxMBeanServerQueryException e) {
 				// Stop collecting this value.
-				log.log(NetdataLevel.ERROR, LoggingUtils.getMessageSupplier(
+				log.log(Level.WARNING, LoggingUtils.buildMessage(
 						"Stop collection value '" + queryInfo.getAttribute() + "' of '" + queryInfo.getName() + "'.",
 						e));
 				queryInfoIterator.remove();
@@ -325,6 +371,10 @@ public class MBeanServerCollector implements Collector, Closeable {
 		}
 	}
 
+	String sanitizeToDimensionId(String name) {
+		return BAD_CHAR.matcher(name).replaceAll("_");
+	}
+
 	@Override
 	public void cleanup() {
 		try {
@@ -332,5 +382,10 @@ public class MBeanServerCollector implements Collector, Closeable {
 		} catch (IOException e) {
 			log.warning(LoggingUtils.buildMessage("Could not cleanup MBeanServerCollector.", e));
 		}
+	}
+
+	@Override
+	public String toString() {
+		return MBeanServerCollector.class.getSimpleName() + "(runtime:'" + serverConfiguration.getName()  + "', charts:" + allChart.size() +")" ;
 	}
 }

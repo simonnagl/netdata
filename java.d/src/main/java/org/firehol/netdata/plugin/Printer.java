@@ -59,21 +59,20 @@ public final class Printer {
 		sb.append(chart.getType());
 		sb.append('.');
 		sb.append(chart.getId());
-		sb.append(' ');
+		sb.append(" '");
 		// Append name
 		if (chart.hasName()) {
-			// TODO: quote if needed
 			sb.append(chart.getName());
 		} else {
 			sb.append("null");
 		}
-		sb.append(" '");
+		sb.append("' '");
 		// Append title
 		sb.append(chart.getTitle());
-		sb.append("' ");
+		sb.append("' '");
 		// Append untis
 		sb.append(chart.getUnits());
-		sb.append(' ');
+		sb.append("' ");
 		// Append familiy
 		if (chart.hasFamily()) {
 			sb.append(chart.getFamily());
@@ -106,14 +105,14 @@ public final class Printer {
 		// Append ID
 		// TODO validate id does not contain a dot '.', see https://github.com/firehol/netdata/wiki/External-Plugins#dimension
 		sb.append(dimension.getId());
-		sb.append(' ');
+		sb.append(" '");
 		// Append name
 		if (dimension.hasName()) {
 			sb.append(dimension.getName());
 		} else {
 			sb.append(dimension.getId());
 		}
-		sb.append(' ');
+		sb.append("' ");
 		// Append algorithm
 		sb.append(dimension.getAlgorithm());
 		sb.append(' ');

@@ -8,6 +8,6 @@ public interface ThreadDimensionLoader {
 	 * 
 	 *  @return dimension for the given thread, or <code>null</code> to skip thread
 	 */
-	public Dimension getOrCreateDimensionFor(long tid);
+	public Dimension getOrCreateDimensionFor(long tid, String name);
 
 }

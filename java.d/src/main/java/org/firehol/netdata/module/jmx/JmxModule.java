@@ -93,6 +93,7 @@ public class JmxModule implements Module {
 		connectToServers();
 
 		List<Chart> charts = initCharts();
+		log.info("Initialized " + allMBeanCollector.size() + " JMX server collectors having " + charts.size() + " initial charts: " + allMBeanCollector);
 		return charts;
 	}
 
@@ -302,6 +303,7 @@ public class JmxModule implements Module {
 			config.setName(virtualMachine.id());
 			if (configuration != null) {
 				config.setCharts(configuration.getCommonCharts());
+				config.setThreadCharts(configuration.getCommonThreadCharts());
 			}
 
 			// Build the MBeanServerCollector

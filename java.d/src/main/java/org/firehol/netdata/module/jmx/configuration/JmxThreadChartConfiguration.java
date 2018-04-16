@@ -16,5 +16,41 @@ public class JmxThreadChartConfiguration extends JmxChartConfigurationBase {
 	 */
 	private JmxDimensionConfiguration dimensionTemplate;
 
+	/** 
+	 * include only threads whose name matches this pattern (before rewrite, if any)
+	 * 
+	 * @see #excludeNamePattern
+	 */
+	private String includeNamePattern;
+
+	/** 
+	 * exclude any threads whose name matches this pattern (before rewrite, if any)
+	 * 
+	 * @see #includeNamePattern
+	 */
+	private String excludeNamePattern;
+
+	/** 
+	 * pattern to use for rewriting thread names (e.g. to merge different threads into a single group)
+	 * 
+	 * @see #rewriteNameReplacement
+	 */
+	private String rewriteNamePattern;
+
+	/** 
+	 * pattern to use for rewriting thread names (e.g. to merge different threads into a single group)
+	 * 
+	 * @see #rewriteNamePattern
+	 */
+	private String rewriteNameReplacement;
+
+	/**
+	 * set case-sensitivity for all thread name patterns
+	 * 
+	 * @see #includeNamePattern
+	 * @see #excludeNamePattern
+	 * @see #rewriteNamePattern
+	 */
+	private boolean namePatternCaseInsensitive;
 
 }
