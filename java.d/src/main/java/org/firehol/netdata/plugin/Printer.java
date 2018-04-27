@@ -55,7 +55,8 @@ public final class Printer {
 		// Start new chart
 		sb.append("CHART ");
 		// Append identifier
-		// TODO validate chart type and id do not contain a dot '.', see https://github.com/firehol/netdata/wiki/External-Plugins#chart
+		// TODO validate chart type and id do not contain a dot '.', see
+		// https://github.com/firehol/netdata/wiki/External-Plugins#chart
 		sb.append(chart.getType());
 		sb.append('.');
 		sb.append(chart.getId());
@@ -103,7 +104,8 @@ public final class Printer {
 		// Start new dimension
 		sb.append("DIMENSION ");
 		// Append ID
-		// TODO validate id does not contain a dot '.', see https://github.com/firehol/netdata/wiki/External-Plugins#dimension
+		// TODO validate id does not contain a dot '.', see
+		// https://github.com/firehol/netdata/wiki/External-Plugins#dimension
 		sb.append(dimension.getId());
 		sb.append(" '");
 		// Append name
@@ -155,10 +157,12 @@ public final class Printer {
 
 	protected static void appendCollectDimension(StringBuilder sb, Dimension dim) {
 		sb.append("SET ");
-		// TODO validate id does not contain a dot '.', see https://github.com/firehol/netdata/wiki/External-Plugins#dimension
+		// TODO validate id does not contain a dot '.', see
+		// https://github.com/firehol/netdata/wiki/External-Plugins#dimension
 		sb.append(dim.getId());
 		sb.append(" = ");
-		if (dim.hasValue()) sb.append(dim.getCurrentValue());
+		if (dim.hasValue())
+			sb.append(dim.getCurrentValue());
 	}
 
 	protected static void appendCollectEnd(StringBuilder sb) {

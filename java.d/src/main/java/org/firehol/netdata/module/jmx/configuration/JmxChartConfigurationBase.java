@@ -41,8 +41,8 @@ public abstract class JmxChartConfigurationBase {
 	 */
 	private String title;
 	/**
-	 * the label of the vertical axis of the chart, all dimensions added to a chart
-	 * should have the same units of measurement
+	 * the label of the vertical axis of the chart, all dimensions added to a
+	 * chart should have the same units of measurement
 	 */
 	private String units;
 	/**
@@ -62,6 +62,5 @@ public abstract class JmxChartConfigurationBase {
 	 * how to interpret collected values.
 	 */
 	private DimensionAlgorithm dimensionAlgorithm = DimensionAlgorithm.ABSOLUTE;
-
 
 }

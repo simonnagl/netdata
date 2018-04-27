@@ -29,7 +29,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Technical Object which contains information which attributes of a 
+ * Technical Object which contains information which attributes of a
  * {@link ThreadMXBean} we collect and where to store the collected values.
  */
 @Getter
@@ -51,7 +51,8 @@ public class ThreadMXBeanQuery extends MBeanQuery {
 
 	private Map<Long, String> threadNameCache = new HashMap<>();
 
-	private ThreadMXBeanQuery(ObjectName name, String attribute, MBeanServerConnection mBeanServer) throws InstanceNotFoundException, IOException {
+	private ThreadMXBeanQuery(ObjectName name, String attribute, MBeanServerConnection mBeanServer)
+			throws InstanceNotFoundException, IOException {
 		super(name, attribute, mBeanServer);
 		this.threadMXBean = newMXBeanProxy(ThreadMXBean.class);
 	}
@@ -59,10 +60,14 @@ public class ThreadMXBeanQuery extends MBeanQuery {
 	/**
 	 * For testing only.
 	 * 
-	 * @deprecated use {@link #getInstance(String, MBeanServerConnection)} instead
+	 * @deprecated use {@link #getInstance(String, MBeanServerConnection)}
+	 *             instead
 	 */
 	@Deprecated
-	ThreadMXBeanQuery(ObjectName name, String attribute, MBeanServerConnection mBeanServer, ThreadMXBean threadMXBean) { // NOPMD exposed for testing
+	ThreadMXBeanQuery(ObjectName name, String attribute, MBeanServerConnection mBeanServer, ThreadMXBean threadMXBean) { // NOPMD
+																														 // exposed
+																														 // for
+																														 // testing
 		super(name, attribute, mBeanServer);
 		this.threadMXBean = threadMXBean;
 	}
@@ -91,19 +96,22 @@ public class ThreadMXBeanQuery extends MBeanQuery {
 				}
 				perThreadFunctionsByAttribute.put("ThreadInfo.WaitedTime", tid -> {
 					ThreadInfo threadInfo = getThreadMXBean().getThreadInfo(tid);
-					if (threadInfo == null) return null;
+					if (threadInfo == null)
+						return null;
 					long value = threadInfo.getWaitedTime();
 					return value == -1 ? null : value;
 				});
 				perThreadFunctionsByAttribute.put("ThreadInfo.WaitedCount", tid -> {
 					ThreadInfo threadInfo = getThreadMXBean().getThreadInfo(tid);
-					if (threadInfo == null) return null;
+					if (threadInfo == null)
+						return null;
 					long value = threadInfo.getWaitedCount();
 					return value == -1 ? null : value;
 				});
 				perThreadFunctionsByAttribute.put("ThreadInfo.BlockedCount", tid -> {
 					ThreadInfo threadInfo = getThreadMXBean().getThreadInfo(tid);
-					if (threadInfo == null) return null;
+					if (threadInfo == null)
+						return null;
 					long value = threadInfo.getBlockedCount();
 					return value == -1 ? null : value;
 				});
@@ -111,7 +119,8 @@ public class ThreadMXBeanQuery extends MBeanQuery {
 		}
 	}
 
-	public static ThreadMXBeanQuery getInstance(String attribute, MBeanServerConnection mBeanServer) throws InitializationException {
+	public static ThreadMXBeanQuery getInstance(String attribute, MBeanServerConnection mBeanServer)
+			throws InitializationException {
 		try {
 			ObjectName name = ObjectName.getInstance(ManagementFactory.THREAD_MXBEAN_NAME);
 			boolean hasThreadMXBeans = mBeanServer.isRegistered(name);
@@ -121,18 +130,21 @@ public class ThreadMXBeanQuery extends MBeanQuery {
 			ThreadMXBeanQuery threadMXBeanQuery = new ThreadMXBeanQuery(name, attribute, mBeanServer);
 			threadMXBeanQuery.ensureAllPerThreadFunctionsInitialized();
 			if (!threadMXBeanQuery.perThreadFunctionsByAttribute.containsKey(attribute)) {
-				throw new InitializationException("Unhandled thread 'value' field: " + attribute + " (available: " + threadMXBeanQuery.perThreadFunctionsByAttribute.keySet() + ")");
+				throw new InitializationException("Unhandled thread 'value' field: " + attribute + " (available: "
+						+ threadMXBeanQuery.perThreadFunctionsByAttribute.keySet() + ")");
 			}
 			return threadMXBeanQuery;
 		} catch (JMException | IOException e) {
-			// log.warning(LoggingUtils.buildMessage("MBeanServer has no ThreadMXBean: " + mBeanServer, e));
+			// log.warning(LoggingUtils.buildMessage("MBeanServer has no
+			// ThreadMXBean: " + mBeanServer, e));
 			throw new InitializationException("Error initializing ThreadMXBean on: " + mBeanServer, e);
 		}
 	}
 
 	private Long queryPerThreadValue(long tid) throws JmxMBeanServerQueryException {
 		LongFunction<Long> func = perThreadFunctionsByAttribute.get(attribute);
-		if (func == null) throw new JmxMBeanServerQueryException("Attribute is not supported or is not available: " + attribute);
+		if (func == null)
+			throw new JmxMBeanServerQueryException("Attribute is not supported or is not available: " + attribute);
 		return func.apply(tid);
 	}
 
@@ -145,11 +157,16 @@ public class ThreadMXBeanQuery extends MBeanQuery {
 		if (getThreadMXBean() == null) {
 			throw new JmxMBeanServerQueryException("Cannot get data for chart without a ThreadMXBean");
 		} else {
-			// killed threads will not be updated, so we clear all values before updating
-			dimensions.stream().filter(d -> d.getAlgorithm() == DimensionAlgorithm.ABSOLUTE).forEach(d -> d.setCurrentValue(null));
+			// killed threads will not be updated, so we clear all values before
+			// updating
+			dimensions.stream().filter(d -> d.getAlgorithm() == DimensionAlgorithm.ABSOLUTE).forEach(
+					d -> d.setCurrentValue(null));
 
 			// enumerate live threads
-			long[] tids = getThreadMXBean().getAllThreadIds(); // does not include GC/compiler threads
+			long[] tids = getThreadMXBean().getAllThreadIds(); // does not
+															   // include
+															   // GC/compiler
+															   // threads
 			// evict dead threads from caches
 			evictCaches(tids);
 			for (long tid : tids) {
@@ -159,10 +176,13 @@ public class ThreadMXBeanQuery extends MBeanQuery {
 				} catch (RuntimeException e) {
 					throw new JmxMBeanServerQueryException("Failed to get dimension for " + tid, e);
 				}
-				if (dimension == null) continue; // skip
+				if (dimension == null)
+					continue; // skip
 
-				// register dimension so that we can clear its value even if it is no longer running
-				if (!dimensions.contains(dimension)) dimensions.add(dimension);
+				// register dimension so that we can clear its value even if it
+				// is no longer running
+				if (!dimensions.contains(dimension))
+					dimensions.add(dimension);
 
 				// collect value
 				Long value = queryPerThreadValue(tid);
@@ -174,15 +194,14 @@ public class ThreadMXBeanQuery extends MBeanQuery {
 						increment = value;
 					} else if (dimension.getAlgorithm() == DimensionAlgorithm.INCREMENTAL) {
 						// put or update with difference (aggregate)
-						Long oldValue = perThreadValuesByAttribute.computeIfAbsent(attribute, x -> new HashMap<>()).put(tid, value);
+						Long oldValue = perThreadValuesByAttribute.computeIfAbsent(attribute, x -> new HashMap<>())
+								.put(tid, value);
 						increment = oldValue == null ? value : value - oldValue;
 					} else {
 						throw new JmxMBeanServerQueryException("Unhandled algorithm: " + dimension.getAlgorithm());
 					}
 					// apply value update
-					dimension.setCurrentValue(dimension.hasValue()
-							? dimension.getCurrentValue() + increment
-							: value);
+					dimension.setCurrentValue(dimension.hasValue() ? dimension.getCurrentValue() + increment : value);
 				}
 			}
 
@@ -193,19 +212,21 @@ public class ThreadMXBeanQuery extends MBeanQuery {
 	private void evictCaches(long[] aliveTids) {
 		Arrays.sort(aliveTids);
 		threadNameCache.entrySet().removeIf(e -> Arrays.binarySearch(aliveTids, e.getKey()) < 0);
-		for (Map<Long, ?> valueCache : perThreadValuesByAttribute.values()) valueCache.entrySet().removeIf(e -> Arrays.binarySearch(aliveTids, e.getKey()) < 0);
+		for (Map<Long, ?> valueCache : perThreadValuesByAttribute.values())
+			valueCache.entrySet().removeIf(e -> Arrays.binarySearch(aliveTids, e.getKey()) < 0);
 	}
 
 	private String getThreadName(long tid) {
 		return threadNameCache.computeIfAbsent(tid, tid_ -> {
-				try {
-					ThreadInfo threadInfo = getThreadMXBean().getThreadInfo(tid);
-					if (threadInfo == null) return null; // thread not alive
-					return threadInfo.getThreadName();
-				} catch (Exception e) {
-					log.log(Level.WARNING, "Could not get thread name", e);
-					return "#" + tid;
-				}
+			try {
+				ThreadInfo threadInfo = getThreadMXBean().getThreadInfo(tid);
+				if (threadInfo == null)
+					return null; // thread not alive
+				return threadInfo.getThreadName();
+			} catch (Exception e) {
+				log.log(Level.WARNING, "Could not get thread name", e);
+				return "#" + tid;
+			}
 		});
 	}
 }

@@ -93,7 +93,8 @@ public class JmxModule implements Module {
 		connectToServers();
 
 		List<Chart> charts = initCharts();
-		log.info("Initialized " + allMBeanCollector.size() + " JMX server collectors having " + charts.size() + " initial charts: " + allMBeanCollector);
+		log.info("Initialized " + allMBeanCollector.size() + " JMX server collectors having " + charts.size()
+				+ " initial charts: " + allMBeanCollector);
 		return charts;
 	}
 
@@ -228,7 +229,8 @@ public class JmxModule implements Module {
 				threadChartConfigById.putIfAbsent(threadChartConfig.getId(), threadChartConfig);
 			}
 
-			List<JmxThreadChartConfiguration> threadChartConfigs = threadChartConfigById.values().stream().collect(Collectors.toList());
+			List<JmxThreadChartConfiguration> threadChartConfigs = threadChartConfigById.values().stream().collect(
+					Collectors.toList());
 			serverConfiguartion.setThreadCharts(threadChartConfigs);
 		}
 	}
@@ -256,7 +258,8 @@ public class JmxModule implements Module {
 		return charts.stream().collect(Collectors.toMap(JmxChartConfiguration::getId, Function.identity()));
 	}
 
-	private Map<String, JmxThreadChartConfiguration> threadChartConfigurationsById(Collection<JmxThreadChartConfiguration> threadCharts) {
+	private Map<String, JmxThreadChartConfiguration> threadChartConfigurationsById(
+			Collection<JmxThreadChartConfiguration> threadCharts) {
 		return threadCharts.stream().collect(Collectors.toMap(JmxThreadChartConfiguration::getId, Function.identity()));
 	}
 

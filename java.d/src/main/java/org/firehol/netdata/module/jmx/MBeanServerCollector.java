@@ -215,9 +215,11 @@ public class MBeanServerCollector implements Collector, Closeable {
 					Predicate<String> threadNameFilter = compileThreadNameFilter(threadChartConfig);
 					Function<String, String> threadNameRewriter = compileThreadNameRewrite(threadChartConfig);
 
-					ThreadMXBeanQuery threadMXBeanQuery = ThreadMXBeanQuery.getInstance(threadChartConfig.getDimensionTemplate().getValue(), mBeanServer);
+					ThreadMXBeanQuery threadMXBeanQuery = ThreadMXBeanQuery
+							.getInstance(threadChartConfig.getDimensionTemplate().getValue(), mBeanServer);
 					threadMXBeanQuery.setDimensionLoader((tid, threadName) -> {
-						if (!threadNameFilter.test(threadName)) return null; // skip excluded
+						if (!threadNameFilter.test(threadName))
+							return null; // skip excluded
 
 						threadName = threadNameRewriter.apply(threadName);
 						String dimensionName = threadChartConfig.getDimensionTemplate().getName();
@@ -228,8 +230,12 @@ public class MBeanServerCollector implements Collector, Closeable {
 						Dimension dimension = chart.getDimensionById(dimensionId);
 						if (dimension == null) {
 
-							log.fine("Adding new dimension " + dimensionName + " to " + chart.getType() + "." + chart.getId());
-							JmxDimensionConfiguration threadDimensionConfig = threadChartConfig.getDimensionTemplate().toBuilder().name(dimensionName).build();
+							log.fine("Adding new dimension " + dimensionName + " to " + chart.getType() + "."
+									+ chart.getId());
+							JmxDimensionConfiguration threadDimensionConfig = threadChartConfig.getDimensionTemplate()
+									.toBuilder()
+									.name(dimensionName)
+									.build();
 							dimension = initializeDimension(threadChartConfig, threadDimensionConfig);
 							dimension.setId(dimensionId);
 							chart.getAllDimension().add(dimension);
@@ -248,19 +254,23 @@ public class MBeanServerCollector implements Collector, Closeable {
 
 	private static Function<String, String> compileThreadNameRewrite(JmxThreadChartConfiguration threadChartConfig) {
 		int flags = Pattern.DOTALL | Pattern.MULTILINE;
-		if (threadChartConfig.isNamePatternCaseInsensitive()) flags |= Pattern.CASE_INSENSITIVE;
+		if (threadChartConfig.isNamePatternCaseInsensitive())
+			flags |= Pattern.CASE_INSENSITIVE;
 
-		if (StringUtils.isBlank(threadChartConfig.getRewriteNamePattern())) return name -> name;
+		if (StringUtils.isBlank(threadChartConfig.getRewriteNamePattern()))
+			return name -> name;
 
 		Pattern rewriteNamePattern = Pattern.compile(threadChartConfig.getRewriteNamePattern(), flags);
 
-		final String replacement = threadChartConfig.getRewriteNamePattern() == null ? "" : threadChartConfig.getRewriteNameReplacement();
+		final String replacement = threadChartConfig.getRewriteNamePattern() == null ? ""
+				: threadChartConfig.getRewriteNameReplacement();
 		return name -> rewriteNamePattern.matcher(name).replaceAll(replacement);
 	}
 
 	private static Predicate<String> compileThreadNameFilter(JmxThreadChartConfiguration threadChartConfig) {
 		int flags = Pattern.DOTALL | Pattern.MULTILINE;
-		if (threadChartConfig.isNamePatternCaseInsensitive()) flags |= Pattern.CASE_INSENSITIVE;
+		if (threadChartConfig.isNamePatternCaseInsensitive())
+			flags |= Pattern.CASE_INSENSITIVE;
 
 		Predicate<String> threadNameTest = name -> true;
 
@@ -386,6 +396,7 @@ public class MBeanServerCollector implements Collector, Closeable {
 
 	@Override
 	public String toString() {
-		return MBeanServerCollector.class.getSimpleName() + "(runtime:'" + serverConfiguration.getName()  + "', charts:" + allChart.size() +")" ;
+		return MBeanServerCollector.class.getSimpleName() + "(runtime:'" + serverConfiguration.getName() + "', charts:"
+				+ allChart.size() + ")";
 	}
 }
