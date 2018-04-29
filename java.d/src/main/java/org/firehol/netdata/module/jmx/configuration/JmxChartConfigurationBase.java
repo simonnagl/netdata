@@ -21,13 +21,19 @@ package org.firehol.netdata.module.jmx.configuration;
 import org.firehol.netdata.model.ChartType;
 import org.firehol.netdata.model.DimensionAlgorithm;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Configuration scheme of per-JVM or per-JVM-thread charts created by the
+ * Configuration scheme of charts created by the
  * {@link org.firehol.netdata.module.jmx.JmxModule}.
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "class", defaultImpl = JmxChartConfiguration.class)
+@JsonSubTypes({ @JsonSubTypes.Type(value = JmxChartConfiguration.class, name = "default"),
+		@JsonSubTypes.Type(value = JmxDynamicChartConfiguration.class, name = "dynamic") })
 @Getter
 @Setter
 public abstract class JmxChartConfigurationBase {

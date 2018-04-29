@@ -25,7 +25,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Configuration scheme of a per-JVM chart created by the
+ * Configuration scheme of chart with fixed dimensions created by the
  * {@link org.firehol.netdata.module.jmx.JmxModule}.
  */
 @Getter

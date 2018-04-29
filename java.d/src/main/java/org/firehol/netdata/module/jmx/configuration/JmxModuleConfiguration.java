@@ -55,10 +55,6 @@ public class JmxModuleConfiguration {
 	 * over and over again.
 	 * </p>
 	 */
-	private List<JmxChartConfiguration> commonCharts = new ArrayList<>();
+	private List<JmxChartConfigurationBase> commonCharts = new ArrayList<>();
 
-	/**
-	 * A list of per-thread chart configurations.
-	 */
-	private List<JmxThreadChartConfiguration> commonThreadCharts = new ArrayList<>();
 }

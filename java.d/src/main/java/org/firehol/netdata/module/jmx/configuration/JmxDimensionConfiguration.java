@@ -33,17 +33,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class JmxDimensionConfiguration {
-
-	/**
-	 * Jmx Object Name.
-	 */
-	private String from;
-
-	/**
-	 * jmxBean property
-	 */
-	private String value;
+public class JmxDimensionConfiguration extends JmxQueryConfiguration {
 
 	private String compositeDataKey;
 

@@ -42,10 +42,9 @@ import javax.management.remote.JMXServiceURL;
 import org.firehol.netdata.exception.InitializationException;
 import org.firehol.netdata.model.Chart;
 import org.firehol.netdata.module.Module;
-import org.firehol.netdata.module.jmx.configuration.JmxChartConfiguration;
+import org.firehol.netdata.module.jmx.configuration.JmxChartConfigurationBase;
 import org.firehol.netdata.module.jmx.configuration.JmxModuleConfiguration;
 import org.firehol.netdata.module.jmx.configuration.JmxServerConfiguration;
-import org.firehol.netdata.module.jmx.configuration.JmxThreadChartConfiguration;
 import org.firehol.netdata.module.jmx.exception.JmxMBeanServerConnectionException;
 import org.firehol.netdata.module.jmx.exception.JmxMBeanServerQueryException;
 import org.firehol.netdata.module.jmx.exception.VirtualMachineConnectionException;
@@ -123,7 +122,6 @@ public class JmxModule implements Module {
 	private void connectToLocalProcess() {
 		JmxServerConfiguration localConfiguration = new JmxServerConfiguration();
 		localConfiguration.setCharts(configuration.getCommonCharts());
-		localConfiguration.setThreadCharts(configuration.getCommonThreadCharts());
 		localConfiguration.setName("JavaPluginDaemon");
 
 		MBeanServerCollector collector = new MBeanServerCollector(localConfiguration,
@@ -185,7 +183,6 @@ public class JmxModule implements Module {
 	private void initConfiguration() throws InitializationException {
 		readConfiguration();
 		propagateCommonChartsToServerConfiguration();
-		propagateCommonThreadChartsToServerConfiguration();
 	}
 
 	private void readConfiguration() throws InitializationException {
@@ -203,35 +200,16 @@ public class JmxModule implements Module {
 				continue;
 			}
 
-			Map<String, JmxChartConfiguration> chartConfigById = chartConfigurationsById(
+			Map<String, JmxChartConfigurationBase> chartConfigById = chartConfigurationsById(
 					serverConfiguartion.getCharts());
 
-			for (JmxChartConfiguration chartConfig : configuration.getCommonCharts()) {
+			for (JmxChartConfigurationBase chartConfig : configuration.getCommonCharts()) {
 				chartConfigById.putIfAbsent(chartConfig.getId(), chartConfig);
 			}
 
-			List<JmxChartConfiguration> chartConfigs = chartConfigById.values().stream().collect(Collectors.toList());
-			serverConfiguartion.setCharts(chartConfigs);
-		}
-	}
-
-	private void propagateCommonThreadChartsToServerConfiguration() {
-		for (JmxServerConfiguration serverConfiguartion : configuration.getJmxServers()) {
-			if (serverConfiguartion.getThreadCharts() == null) {
-				serverConfiguartion.setThreadCharts(configuration.getCommonThreadCharts());
-				continue;
-			}
-
-			Map<String, JmxThreadChartConfiguration> threadChartConfigById = threadChartConfigurationsById(
-					serverConfiguartion.getThreadCharts());
-
-			for (JmxThreadChartConfiguration threadChartConfig : configuration.getCommonThreadCharts()) {
-				threadChartConfigById.putIfAbsent(threadChartConfig.getId(), threadChartConfig);
-			}
-
-			List<JmxThreadChartConfiguration> threadChartConfigs = threadChartConfigById.values().stream().collect(
+			List<JmxChartConfigurationBase> chartConfigs = chartConfigById.values().stream().collect(
 					Collectors.toList());
-			serverConfiguartion.setThreadCharts(threadChartConfigs);
+			serverConfiguartion.setCharts(chartConfigs);
 		}
 	}
 
@@ -254,13 +232,8 @@ public class JmxModule implements Module {
 		return allChart;
 	}
 
-	private Map<String, JmxChartConfiguration> chartConfigurationsById(List<JmxChartConfiguration> charts) {
-		return charts.stream().collect(Collectors.toMap(JmxChartConfiguration::getId, Function.identity()));
-	}
-
-	private Map<String, JmxThreadChartConfiguration> threadChartConfigurationsById(
-			Collection<JmxThreadChartConfiguration> threadCharts) {
-		return threadCharts.stream().collect(Collectors.toMap(JmxThreadChartConfiguration::getId, Function.identity()));
+	private Map<String, JmxChartConfigurationBase> chartConfigurationsById(List<JmxChartConfigurationBase> charts) {
+		return charts.stream().collect(Collectors.toMap(JmxChartConfigurationBase::getId, Function.identity()));
 	}
 
 	protected MBeanServerCollector buildMBeanServerCollector(JmxServerConfiguration config)
@@ -306,7 +279,6 @@ public class JmxModule implements Module {
 			config.setName(virtualMachine.id());
 			if (configuration != null) {
 				config.setCharts(configuration.getCommonCharts());
-				config.setThreadCharts(configuration.getCommonThreadCharts());
 			}
 
 			// Build the MBeanServerCollector
