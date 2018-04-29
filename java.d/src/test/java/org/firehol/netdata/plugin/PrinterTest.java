@@ -47,7 +47,7 @@ public class PrinterTest {
 
 		// Verify
 		assertEquals(
-				"CHART type.id name 'title' units family context line 1000 1\nDIMENSION id name absolute 1 1 hidden\n",
+				"CHART type.id 'name' 'title' 'units' family context line 1000 1\nDIMENSION id 'name' absolute 1 1 hidden\n",
 				systemOutRule.getLog());
 	}
 
@@ -62,7 +62,7 @@ public class PrinterTest {
 		Printer.appendInitializeChart(sb, chart);
 
 		// Verify
-		assertEquals("CHART type.id name 'title' units family context line 1000", sb.toString());
+		assertEquals("CHART type.id 'name' 'title' 'units' family context line 1000", sb.toString());
 	}
 
 	@Test
@@ -77,7 +77,7 @@ public class PrinterTest {
 		Printer.appendInitializeChart(sb, chart);
 
 		// Verify
-		assertEquals("CHART type.id null 'title' units family context line 1000", sb.toString());
+		assertEquals("CHART type.id 'null' 'title' 'units' family context line 1000", sb.toString());
 	}
 
 	@Test
@@ -92,7 +92,7 @@ public class PrinterTest {
 		Printer.appendInitializeChart(sb, chart);
 
 		// Verify
-		assertEquals("CHART type.id name 'title' units id context line 1000", sb.toString());
+		assertEquals("CHART type.id 'name' 'title' 'units' id context line 1000", sb.toString());
 	}
 
 	@Test
@@ -107,7 +107,7 @@ public class PrinterTest {
 		Printer.appendInitializeChart(sb, chart);
 
 		// Verify
-		assertEquals("CHART type.id name 'title' units family id line 1000", sb.toString());
+		assertEquals("CHART type.id 'name' 'title' 'units' family id line 1000", sb.toString());
 	}
 
 	@Test
@@ -121,7 +121,7 @@ public class PrinterTest {
 		Printer.appendInitializeDimension(sb, dimension);
 
 		// Verify
-		assertEquals("DIMENSION id name absolute 1 1 hidden", sb.toString());
+		assertEquals("DIMENSION id 'name' absolute 1 1 hidden", sb.toString());
 	}
 
 	@Test
@@ -136,7 +136,7 @@ public class PrinterTest {
 		Printer.appendInitializeDimension(sb, dimension);
 
 		// Verify
-		assertEquals("DIMENSION id name absolute 1 1", sb.toString());
+		assertEquals("DIMENSION id 'name' absolute 1 1", sb.toString());
 	}
 
 	@Test
@@ -151,7 +151,7 @@ public class PrinterTest {
 		Printer.appendInitializeDimension(sb, dimension);
 
 		// Verify
-		assertEquals("DIMENSION id id absolute 1 1 hidden", sb.toString());
+		assertEquals("DIMENSION id 'id' absolute 1 1 hidden", sb.toString());
 	}
 
 	@Test
