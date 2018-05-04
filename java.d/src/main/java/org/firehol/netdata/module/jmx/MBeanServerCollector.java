@@ -41,8 +41,8 @@ import org.firehol.netdata.exception.InitializationException;
 import org.firehol.netdata.exception.UnreachableCodeException;
 import org.firehol.netdata.model.Chart;
 import org.firehol.netdata.model.Dimension;
-import org.firehol.netdata.module.jmx.configuration.JmxChartConfiguration;
 import org.firehol.netdata.module.jmx.configuration.JmxChartBaseConfiguration;
+import org.firehol.netdata.module.jmx.configuration.JmxChartConfiguration;
 import org.firehol.netdata.module.jmx.configuration.JmxDimensionConfiguration;
 import org.firehol.netdata.module.jmx.configuration.JmxDynamicChartConfiguration;
 import org.firehol.netdata.module.jmx.configuration.JmxNameQueryConfiguration;
@@ -79,7 +79,7 @@ public class MBeanServerCollector implements Collector, Closeable {
 
 	private JMXConnector jmxConnector;
 
-	private List<MBeanQuery> allMBeanQuery = new LinkedList<>();
+	private List<MBeanQuery<?, ?>> allMBeanQuery = new LinkedList<>();
 
 	private List<Chart> allChart = new LinkedList<>();
 
@@ -152,7 +152,7 @@ public class MBeanServerCollector implements Collector, Closeable {
 		}
 
 		// Query mBeanServer.
-		Object attribute = getAttribute(runtimeObjectName, "Name");
+		Object attribute = queryAttribute(runtimeObjectName, "Name");
 		if (attribute instanceof String) {
 			String runtimeName = (String) attribute;
 			return runtimeName;
@@ -203,7 +203,7 @@ public class MBeanServerCollector implements Collector, Closeable {
 			chart.getAllDimension().add(dimension);
 
 			// Add to queryInfo
-			final MBeanQuery queryInfo;
+			final MBeanQuery<?, ?> queryInfo;
 			try {
 				queryInfo = initializeMBeanQueryInfo(dimensionConfig);
 			} catch (JmxMBeanServerQueryException e) {
@@ -213,11 +213,11 @@ public class MBeanServerCollector implements Collector, Closeable {
 				continue;
 			}
 
-			Optional<MBeanQuery> foundQueryInfo = allMBeanQuery.stream()
+			Optional<MBeanQuery<?, ?>> foundQueryInfo = allMBeanQuery.stream()
 					.filter(presentQueryInfo -> presentQueryInfo.queryDestinationEquals(queryInfo))
 					.findAny();
 
-			MBeanQuery query;
+			MBeanQuery<?, ?> query;
 			if (!foundQueryInfo.isPresent()) {
 				allMBeanQuery.add(queryInfo);
 				query = queryInfo;
@@ -233,6 +233,7 @@ public class MBeanServerCollector implements Collector, Closeable {
 		return chart;
 	}
 
+	@Deprecated
 	private Chart createThreadChart(JmxDynamicChartConfiguration chartConfig) throws InitializationException {
 		Chart chart = initializeChart(chartConfig);
 		try {
@@ -342,7 +343,7 @@ public class MBeanServerCollector implements Collector, Closeable {
 		return dimension;
 	}
 
-	protected MBeanQuery initializeMBeanQueryInfo(JmxQueryConfiguration queryConfig)
+	protected MBeanQuery<?, ?> initializeMBeanQueryInfo(JmxQueryConfiguration queryConfig)
 			throws JmxMBeanServerQueryException {
 
 		// Query once to get dataType.
@@ -354,7 +355,7 @@ public class MBeanServerCollector implements Collector, Closeable {
 		} catch (NullPointerException e) {
 			throw new JmxMBeanServerQueryException("'' is no valid JMX OBjectName", e);
 		}
-		Object value = getAttribute(name, queryConfig.getValue());
+		Object value = queryAttribute(name, queryConfig.getValue());
 
 		// Add to queryInfo
 		MBeanQueryInfo queryInfo = new MBeanQueryInfo();
@@ -362,21 +363,21 @@ public class MBeanServerCollector implements Collector, Closeable {
 		queryInfo.setMBeanAttribute(queryConfig.getValue());
 		queryInfo.setMBeanAttributeExample(value);
 		queryInfo.setMBeanServer(mBeanServer);
-		MBeanQuery query = MBeanQueryFactory.build(queryInfo);
+		MBeanQuery<?, ?> query = MBeanQueryFactory.build(queryInfo);
 
 		return query;
 	}
 
-	protected Object getAttribute(ObjectName name, String attribute) throws JmxMBeanServerQueryException {
+	protected Object queryAttribute(ObjectName name, String attribute) throws JmxMBeanServerQueryException {
 		return MBeanServerUtils.getAttribute(mBeanServer, name, attribute);
 	}
 
 	public Collection<Chart> collectValues() {
 		// Query all attributes and fill charts.
-		Iterator<MBeanQuery> queryInfoIterator = allMBeanQuery.iterator();
+		Iterator<MBeanQuery<?, ?>> queryInfoIterator = allMBeanQuery.iterator();
 
 		while (queryInfoIterator.hasNext()) {
-			MBeanQuery queryInfo = queryInfoIterator.next();
+			MBeanQuery<?, ?> queryInfo = queryInfoIterator.next();
 
 			try {
 				queryInfo.query();

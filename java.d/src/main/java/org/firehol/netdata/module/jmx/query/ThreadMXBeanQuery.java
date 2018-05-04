@@ -34,7 +34,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class ThreadMXBeanQuery extends MBeanQuery {
+public class ThreadMXBeanQuery extends MBeanQuery<Object, ThreadMXBean> {
 
 	private final Logger log = Logger.getLogger("org.firehol.netdata.module.jmx");
 
@@ -53,8 +53,8 @@ public class ThreadMXBeanQuery extends MBeanQuery {
 
 	private ThreadMXBeanQuery(ObjectName name, String attribute, MBeanServerConnection mBeanServer)
 			throws InstanceNotFoundException, IOException {
-		super(name, attribute, mBeanServer);
-		this.threadMXBean = newMXBeanProxy(ThreadMXBean.class);
+		super(name, attribute, mBeanServer, Object.class, ThreadMXBean.class);
+		this.threadMXBean = newMXBeanProxy();
 	}
 
 	/**
@@ -68,7 +68,7 @@ public class ThreadMXBeanQuery extends MBeanQuery {
 																														 // exposed
 																														 // for
 																														 // testing
-		super(name, attribute, mBeanServer);
+		super(name, attribute, mBeanServer, Object.class, ThreadMXBean.class);
 		this.threadMXBean = threadMXBean;
 	}
 

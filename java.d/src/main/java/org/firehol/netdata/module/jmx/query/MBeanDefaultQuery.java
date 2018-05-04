@@ -18,16 +18,13 @@
 
 package org.firehol.netdata.module.jmx.query;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 
-import org.firehol.netdata.model.Dimension;
 import org.firehol.netdata.module.jmx.entity.MBeanQueryDimensionMapping;
 import org.firehol.netdata.module.jmx.exception.JmxMBeanServerQueryException;
-import org.firehol.netdata.module.jmx.utils.MBeanServerUtils;
+import org.firehol.netdata.module.jmx.store.MBeanLongStore;
+import org.firehol.netdata.module.jmx.store.MBeanValueStore;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -39,40 +36,28 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class MBeanDefaultQuery extends MBeanQuery {
-
-	/**
-	 * The Class of the object returned by the query.
-	 */
-	private Class<?> type;
+public class MBeanDefaultQuery<E, T> extends MBeanQuery<E, T> {
 
 	@Getter(AccessLevel.NONE)
-	private List<Dimension> dimensions = new LinkedList<>();
+	protected MBeanValueStore mBeanValueStore = new MBeanLongStore();
 
 	public MBeanDefaultQuery(ObjectName name, String attribute, MBeanServerConnection mBeanServer,
-			Class<?> attributeType) {
-		super(name, attribute, mBeanServer);
-		this.type = attributeType;
+			Class<E> attributeType, Class<T> objectType) {
+		super(name, attribute, mBeanServer, attributeType, objectType);
 	}
 
 	@Override
 	public void addDimension(MBeanQueryDimensionMapping queryInfo) {
-		this.dimensions.add(queryInfo.getDimension());
+		if (queryInfo.hasCompositeDataKey())
+			throw new UnsupportedOperationException("Composite data key not supported.");
+		this.mBeanValueStore.addDimension(queryInfo.getDimension());
 	}
 
+	@Override
 	public void query() throws JmxMBeanServerQueryException {
-		long value = toLong(MBeanServerUtils.getAttribute(mBeanServer, getName(), getAttribute()));
-		for (Dimension dim : dimensions) {
-			dim.setCurrentValue(value);
-		}
-	}
-
-	protected long toLong(Object any) {
-		if (any instanceof Integer) {
-			return ((Integer) any).longValue();
-		} else {
-			return (long) any;
-		}
+		// expect number
+		E value = queryAttribute();
+		mBeanValueStore.store(value);
 	}
 
 }

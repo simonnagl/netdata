@@ -4,8 +4,9 @@ import org.firehol.netdata.model.Dimension;
 
 public class MBeanDoubleStore extends MBeanValueStore {
 
-	private final int LONG_RESOLUTION = 100;
+	private final int LONG_RESOLUTION = 1000;
 
+	@Override
 	protected void prepareDimension(Dimension dimension) {
 		dimension.setDivisor(dimension.getDivisor() * this.LONG_RESOLUTION);
 	}

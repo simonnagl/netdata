@@ -46,6 +46,7 @@ import org.firehol.netdata.module.jmx.configuration.JmxDimensionConfiguration;
 import org.firehol.netdata.module.jmx.configuration.JmxServerConfiguration;
 import org.firehol.netdata.module.jmx.exception.JmxMBeanServerQueryException;
 import org.firehol.netdata.module.jmx.query.MBeanDefaultQuery;
+import org.firehol.netdata.module.jmx.query.MBeanQuery;
 import org.firehol.netdata.test.utils.ReflectionUtils;
 import org.firehol.netdata.test.utils.TestObjectBuilder;
 import org.junit.Test;
@@ -142,13 +143,12 @@ public class MBeanServerCollectorTest {
 		when(mBeanServer.getAttribute(name, "value")).thenReturn(new Long(1234));
 
 		// Test
-		MBeanDefaultQuery queryInfo = (MBeanDefaultQuery) mBeanServerCollector
-				.initializeMBeanQueryInfo(dimensionConfig);
+		MBeanQuery<?, ?> queryInfo = mBeanServerCollector.initializeMBeanQueryInfo(dimensionConfig);
 
 		// Verify
 		assertEquals(name, queryInfo.getName());
 		assertEquals("value", queryInfo.getAttribute());
-		assertEquals(Long.class, queryInfo.getType());
+		assertEquals(Long.class, queryInfo.getAttributeType());
 	}
 
 	@Test
@@ -162,7 +162,7 @@ public class MBeanServerCollectorTest {
 		when(mBeanServer.getAttribute(name, attribute)).thenReturn(new Long(1234));
 
 		// Test
-		Object value = mBeanServerCollector.getAttribute(name, attribute);
+		Object value = mBeanServerCollector.queryAttribute(name, attribute);
 
 		// Verify
 		assertEquals(1234L, value);
@@ -179,7 +179,7 @@ public class MBeanServerCollectorTest {
 		when(mBeanServer.getAttribute(name, attribute)).thenThrow(new AttributeNotFoundException());
 
 		// Test
-		mBeanServerCollector.getAttribute(name, attribute);
+		mBeanServerCollector.queryAttribute(name, attribute);
 	}
 
 	@Test

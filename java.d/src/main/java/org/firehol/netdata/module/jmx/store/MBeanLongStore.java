@@ -4,6 +4,6 @@ public class MBeanLongStore extends MBeanValueStore {
 
 	@Override
 	public long toLong(Object value) {
-		return (long) ((Long) value);
+		return ((Number) value).longValue();
 	}
 }

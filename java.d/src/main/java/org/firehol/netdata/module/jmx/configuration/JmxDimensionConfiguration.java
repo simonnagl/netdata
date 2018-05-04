@@ -35,8 +35,6 @@ import lombok.Setter;
 @Setter
 public class JmxDimensionConfiguration extends JmxQueryConfiguration {
 
-	private String compositeDataKey;
-
 	/**
 	 * Multiply the collected value before displaying it.
 	 */

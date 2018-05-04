@@ -11,8 +11,6 @@ import lombok.Setter;
 @Setter
 public class JmxNameQueryConfiguration extends JmxQueryConfiguration {
 
-	private String compositeDataKey;
-
 	/**
 	 * include only objects whose name matches this pattern (before rewrite, if
 	 * any)

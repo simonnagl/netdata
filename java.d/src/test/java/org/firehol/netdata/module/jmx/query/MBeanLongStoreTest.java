@@ -2,25 +2,17 @@ package org.firehol.netdata.module.jmx.query;
 
 import static org.junit.Assert.assertEquals;
 
-import org.junit.Ignore;
+import org.firehol.netdata.module.jmx.store.MBeanLongStore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class MBeanDefaultQueryTest {
+public class MBeanLongStoreTest {
 
 	@InjectMocks
-	public MBeanDefaultQuery mBeanQuery;
-
-	@SuppressWarnings("PMD")
-	@Ignore
-	@Test
-	public void testQuery() throws Exception {
-		// TODO: would need to mock MBeanDefaultQuery.mBeanServer
-		mBeanQuery.query();
-	}
+	public MBeanLongStore mBeanQuery;
 
 	@Test
 	public void testToLongLong() {

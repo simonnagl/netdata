@@ -24,4 +24,10 @@ public class JmxQueryConfiguration {
 	 */
 	private String value;
 
+	/**
+	 * If {@link #value} is not a scalar, defines how to extract a scalar value
+	 * from it.
+	 */
+	private String compositeDataKey;
+
 }

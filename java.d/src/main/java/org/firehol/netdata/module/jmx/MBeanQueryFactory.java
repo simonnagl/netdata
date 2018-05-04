@@ -13,7 +13,7 @@ public final class MBeanQueryFactory {
 	private MBeanQueryFactory() {
 	}
 
-	public static MBeanQuery build(MBeanQueryInfo queryInfo) {
+	public static MBeanQuery<?, ?> build(MBeanQueryInfo queryInfo) {
 		if (Double.class.isAssignableFrom(queryInfo.getMBeanAttributeExample().getClass())) {
 			return new MBeanQueryDouble(queryInfo.getMBeanServer(), queryInfo.getMBeanName(),
 					queryInfo.getMBeanAttribute());
@@ -24,7 +24,7 @@ public final class MBeanQueryFactory {
 					queryInfo.getMBeanServer());
 		}
 
-		return new MBeanDefaultQuery(queryInfo.getMBeanName(), queryInfo.getMBeanAttribute(),
-				queryInfo.getMBeanServer(), queryInfo.getMBeanAttributeExample().getClass());
+		return new MBeanDefaultQuery<>(queryInfo.getMBeanName(), queryInfo.getMBeanAttribute(),
+				queryInfo.getMBeanServer(), queryInfo.getMBeanAttributeExample().getClass(), Object.class);
 	}
 }

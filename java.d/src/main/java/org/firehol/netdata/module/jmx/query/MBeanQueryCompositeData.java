@@ -14,14 +14,13 @@ import org.firehol.netdata.module.jmx.entity.MBeanQueryDimensionMapping;
 import org.firehol.netdata.module.jmx.exception.ClassTypeNotSupportedException;
 import org.firehol.netdata.module.jmx.exception.JmxMBeanServerQueryException;
 import org.firehol.netdata.module.jmx.store.MBeanValueStore;
-import org.firehol.netdata.module.jmx.utils.MBeanServerUtils;
 
-public class MBeanQueryCompositeData extends MBeanQuery {
+public class MBeanQueryCompositeData extends MBeanQuery<CompositeData, Object> {
 
 	private Map<String, MBeanValueStore> valueStoreByCompositeDataKey = new TreeMap<>();
 
 	public MBeanQueryCompositeData(ObjectName name, String attribute, MBeanServerConnection mBeanServer) {
-		super(name, attribute, mBeanServer);
+		super(name, attribute, mBeanServer, CompositeData.class, Object.class);
 	}
 
 	@Override
@@ -33,7 +32,7 @@ public class MBeanQueryCompositeData extends MBeanQuery {
 		if (valueStore == null) {
 			CompositeData compositeData;
 			try {
-				compositeData = (CompositeData) MBeanServerUtils.getAttribute(mBeanServer, getName(), getAttribute());
+				compositeData = queryAttribute();
 			} catch (JmxMBeanServerQueryException e) {
 				throw new InitializationException("Could not query for attribute.", e);
 			}
@@ -54,8 +53,7 @@ public class MBeanQueryCompositeData extends MBeanQuery {
 
 	@Override
 	public void query() throws JmxMBeanServerQueryException {
-		CompositeData compositeData = (CompositeData) MBeanServerUtils.getAttribute(mBeanServer, getName(),
-				getAttribute());
+		CompositeData compositeData = queryAttribute();
 
 		for (Entry<String, MBeanValueStore> dimensionByCompositeDataKey : valueStoreByCompositeDataKey.entrySet()) {
 			String compositeDataKey = dimensionByCompositeDataKey.getKey();
