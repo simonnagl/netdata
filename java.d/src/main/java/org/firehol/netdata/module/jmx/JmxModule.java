@@ -42,7 +42,7 @@ import javax.management.remote.JMXServiceURL;
 import org.firehol.netdata.exception.InitializationException;
 import org.firehol.netdata.model.Chart;
 import org.firehol.netdata.module.Module;
-import org.firehol.netdata.module.jmx.configuration.JmxChartConfigurationBase;
+import org.firehol.netdata.module.jmx.configuration.JmxChartBaseConfiguration;
 import org.firehol.netdata.module.jmx.configuration.JmxModuleConfiguration;
 import org.firehol.netdata.module.jmx.configuration.JmxServerConfiguration;
 import org.firehol.netdata.module.jmx.exception.JmxMBeanServerConnectionException;
@@ -200,14 +200,14 @@ public class JmxModule implements Module {
 				continue;
 			}
 
-			Map<String, JmxChartConfigurationBase> chartConfigById = chartConfigurationsById(
+			Map<String, JmxChartBaseConfiguration> chartConfigById = chartConfigurationsById(
 					serverConfiguartion.getCharts());
 
-			for (JmxChartConfigurationBase chartConfig : configuration.getCommonCharts()) {
+			for (JmxChartBaseConfiguration chartConfig : configuration.getCommonCharts()) {
 				chartConfigById.putIfAbsent(chartConfig.getId(), chartConfig);
 			}
 
-			List<JmxChartConfigurationBase> chartConfigs = chartConfigById.values().stream().collect(
+			List<JmxChartBaseConfiguration> chartConfigs = chartConfigById.values().stream().collect(
 					Collectors.toList());
 			serverConfiguartion.setCharts(chartConfigs);
 		}
@@ -232,8 +232,8 @@ public class JmxModule implements Module {
 		return allChart;
 	}
 
-	private Map<String, JmxChartConfigurationBase> chartConfigurationsById(List<JmxChartConfigurationBase> charts) {
-		return charts.stream().collect(Collectors.toMap(JmxChartConfigurationBase::getId, Function.identity()));
+	private Map<String, JmxChartBaseConfiguration> chartConfigurationsById(List<JmxChartBaseConfiguration> charts) {
+		return charts.stream().collect(Collectors.toMap(JmxChartBaseConfiguration::getId, Function.identity()));
 	}
 
 	protected MBeanServerCollector buildMBeanServerCollector(JmxServerConfiguration config)

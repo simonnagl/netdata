@@ -9,7 +9,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class JmxDynamicChartConfiguration extends JmxChartConfigurationBase {
+public class JmxDynamicChartConfiguration extends JmxChartBaseConfiguration {
 
 	/**
 	 * dimension this chart displays for each object

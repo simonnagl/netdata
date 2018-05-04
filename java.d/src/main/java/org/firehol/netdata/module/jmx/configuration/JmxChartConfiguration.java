@@ -30,7 +30,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class JmxChartConfiguration extends JmxChartConfigurationBase {
+public class JmxChartConfiguration extends JmxChartBaseConfiguration {
 
 	/**
 	 * dimensions this chart displays.

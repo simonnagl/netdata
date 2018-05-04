@@ -42,7 +42,7 @@ import org.firehol.netdata.exception.UnreachableCodeException;
 import org.firehol.netdata.model.Chart;
 import org.firehol.netdata.model.Dimension;
 import org.firehol.netdata.module.jmx.configuration.JmxChartConfiguration;
-import org.firehol.netdata.module.jmx.configuration.JmxChartConfigurationBase;
+import org.firehol.netdata.module.jmx.configuration.JmxChartBaseConfiguration;
 import org.firehol.netdata.module.jmx.configuration.JmxDimensionConfiguration;
 import org.firehol.netdata.module.jmx.configuration.JmxDynamicChartConfiguration;
 import org.firehol.netdata.module.jmx.configuration.JmxNameQueryConfiguration;
@@ -170,7 +170,7 @@ public class MBeanServerCollector implements Collector, Closeable {
 
 		// Step 1
 		// Check commonChart configuration
-		for (JmxChartConfigurationBase chartConfig : serverConfiguration.getCharts()) {
+		for (JmxChartBaseConfiguration chartConfig : serverConfiguration.getCharts()) {
 			// TODO: use try ... catch so that a single chart does not kill the
 			// rest
 			final Chart chart;
@@ -313,7 +313,7 @@ public class MBeanServerCollector implements Collector, Closeable {
 		return threadNameTest;
 	}
 
-	protected Chart initializeChart(JmxChartConfigurationBase config) {
+	protected Chart initializeChart(JmxChartBaseConfiguration config) {
 		Chart chart = new Chart();
 
 		chart.setType("jmx_" + serverConfiguration.getName());
@@ -330,7 +330,7 @@ public class MBeanServerCollector implements Collector, Closeable {
 		return chart;
 	}
 
-	protected Dimension initializeDimension(JmxChartConfigurationBase chartConfig,
+	protected Dimension initializeDimension(JmxChartBaseConfiguration chartConfig,
 			JmxDimensionConfiguration dimensionConfig) {
 		Dimension dimension = new Dimension();
 		dimension.setId(dimensionConfig.getName());

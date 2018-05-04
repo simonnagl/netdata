@@ -55,6 +55,6 @@ public class JmxModuleConfiguration {
 	 * over and over again.
 	 * </p>
 	 */
-	private List<JmxChartConfigurationBase> commonCharts = new ArrayList<>();
+	private List<JmxChartBaseConfiguration> commonCharts = new ArrayList<>();
 
 }
