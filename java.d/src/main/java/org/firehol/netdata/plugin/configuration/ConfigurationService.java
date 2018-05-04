@@ -19,6 +19,7 @@
 package org.firehol.netdata.plugin.configuration;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.logging.Logger;
 
@@ -89,7 +90,8 @@ public final class ConfigurationService {
 	 * @return The configuration read from file, or if it was invalid the
 	 *         default configuration.
 	 * @throws ConfigurationSchemeInstantiationException
-	 *             if it was not possible to instantiate clazz
+	 *             if file failed to parse and it was not possible to
+	 *             instantiate clazz for a default
 	 */
 	protected <T> T readConfiguration(File file, Class<T> clazz) throws ConfigurationSchemeInstantiationException {
 		T configuration = null;
@@ -100,12 +102,12 @@ public final class ConfigurationService {
 		} catch (JsonParseException | JsonMappingException e) {
 			log.log(NetdataLevel.ERROR, LoggingUtils.getMessageSupplier(
 					"Could not read malformed configuration file '" + file.getAbsolutePath() + ".", e));
-		} catch (Exception e) {
+		} catch (RuntimeException | IOException e) {
 			log.log(NetdataLevel.ERROR, LoggingUtils.getMessageSupplier("Could not read configuration file '"
 					+ file.getAbsolutePath() + "', " + clazz + ", " + mapper + ".", e));
 		}
 
-		// If we still have no configuration try to read the default one.
+		// If we still have no configuration try to create the default one.
 		if (configuration == null) {
 			try {
 				configuration = clazz.newInstance();
