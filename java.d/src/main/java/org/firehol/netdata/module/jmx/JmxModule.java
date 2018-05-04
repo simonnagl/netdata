@@ -314,8 +314,10 @@ public class JmxModule implements Module {
 
 	@Override
 	public Collection<Chart> collectValues() {
-		return allMBeanCollector.stream().map(MBeanServerCollector::collectValues).flatMap(Collection::stream).collect(
-				Collectors.toList());
+		return allMBeanCollector.stream()
+				.map(MBeanServerCollector::collectValues)
+				.flatMap(Collection<Chart>::stream)
+				.collect(Collectors.toList());
 	}
 
 	@Override

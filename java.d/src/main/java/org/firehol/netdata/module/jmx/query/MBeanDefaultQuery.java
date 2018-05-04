@@ -18,9 +18,6 @@
 
 package org.firehol.netdata.module.jmx.query;
 
-import javax.management.MBeanServerConnection;
-import javax.management.ObjectName;
-
 import org.firehol.netdata.module.jmx.entity.MBeanQueryDimensionMapping;
 import org.firehol.netdata.module.jmx.exception.JmxMBeanServerQueryException;
 import org.firehol.netdata.module.jmx.store.MBeanLongStore;
@@ -36,14 +33,15 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class MBeanDefaultQuery<E, T> extends MBeanQuery<E, T> {
+public class MBeanDefaultQuery<E> implements MappingDimensionUpdater {
+
+	private MBeanQuery<E> parent;
 
 	@Getter(AccessLevel.NONE)
 	protected MBeanValueStore mBeanValueStore = new MBeanLongStore();
 
-	public MBeanDefaultQuery(ObjectName name, String attribute, MBeanServerConnection mBeanServer,
-			Class<E> attributeType, Class<T> objectType) {
-		super(name, attribute, mBeanServer, attributeType, objectType);
+	public MBeanDefaultQuery(MBeanQuery<E> parent) {
+		this.parent = parent;
 	}
 
 	@Override
@@ -54,10 +52,14 @@ public class MBeanDefaultQuery<E, T> extends MBeanQuery<E, T> {
 	}
 
 	@Override
-	public void query() throws JmxMBeanServerQueryException {
+	public void updateDimensionValues() throws JmxMBeanServerQueryException {
 		// expect number
-		E value = queryAttribute();
+		E value = parent.getValue();
 		mBeanValueStore.store(value);
 	}
 
+	@Override
+	public String toString() {
+		return "query:" + parent.toString();
+	}
 }

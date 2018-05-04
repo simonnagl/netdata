@@ -4,8 +4,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import javax.management.MBeanServerConnection;
-import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 
 import org.firehol.netdata.exception.InitializationException;
@@ -15,13 +13,15 @@ import org.firehol.netdata.module.jmx.exception.ClassTypeNotSupportedException;
 import org.firehol.netdata.module.jmx.exception.JmxMBeanServerQueryException;
 import org.firehol.netdata.module.jmx.store.MBeanValueStore;
 
-public class MBeanQueryCompositeData extends MBeanQuery<CompositeData, Object> {
+import lombok.AllArgsConstructor;
 
-	private Map<String, MBeanValueStore> valueStoreByCompositeDataKey = new TreeMap<>();
+@AllArgsConstructor
+public class MBeanQueryCompositeData<E> implements MappingDimensionUpdater, MBeanQueryFunction<String, E> {
 
-	public MBeanQueryCompositeData(ObjectName name, String attribute, MBeanServerConnection mBeanServer) {
-		super(name, attribute, mBeanServer, CompositeData.class, Object.class);
-	}
+	private MBeanQuery<? extends CompositeData> parent;
+
+	private final Class<E> valueType;
+	private final Map<String, MBeanValueStore> valueStoreByCompositeDataKey = new TreeMap<>();
 
 	@Override
 	public void addDimension(MBeanQueryDimensionMapping mappingInfo) throws InitializationException {
@@ -32,7 +32,7 @@ public class MBeanQueryCompositeData extends MBeanQuery<CompositeData, Object> {
 		if (valueStore == null) {
 			CompositeData compositeData;
 			try {
-				compositeData = queryAttribute();
+				compositeData = parent.getValue();
 			} catch (JmxMBeanServerQueryException e) {
 				throw new InitializationException("Could not query for attribute.", e);
 			}
@@ -52,14 +52,19 @@ public class MBeanQueryCompositeData extends MBeanQuery<CompositeData, Object> {
 	}
 
 	@Override
-	public void query() throws JmxMBeanServerQueryException {
-		CompositeData compositeData = queryAttribute();
+	public void updateDimensionValues() throws JmxMBeanServerQueryException {
+		CompositeData compositeData = parent.getValue();
 
 		for (Entry<String, MBeanValueStore> dimensionByCompositeDataKey : valueStoreByCompositeDataKey.entrySet()) {
 			String compositeDataKey = dimensionByCompositeDataKey.getKey();
 			MBeanValueStore valueStore = dimensionByCompositeDataKey.getValue();
 
-			valueStore.store(compositeData.get(compositeDataKey));
+			valueStore.store(valueType.cast(compositeData.get(compositeDataKey)));
 		}
+	}
+
+	@Override
+	public E getValue(String compositeDataKey) throws JmxMBeanServerQueryException {
+		return valueType.cast(parent.getValue().get(compositeDataKey));
 	}
 }

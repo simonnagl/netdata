@@ -20,8 +20,8 @@ package org.firehol.netdata.module.jmx;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -32,6 +32,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
+import javax.management.JMException;
 import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
@@ -47,11 +48,22 @@ import org.firehol.netdata.module.jmx.configuration.JmxDimensionConfiguration;
 import org.firehol.netdata.module.jmx.configuration.JmxDynamicChartConfiguration;
 import org.firehol.netdata.module.jmx.configuration.JmxNameQueryConfiguration;
 import org.firehol.netdata.module.jmx.configuration.JmxQueryConfiguration;
+import org.firehol.netdata.module.jmx.configuration.JmxQueryResultTransformationConfiguration;
 import org.firehol.netdata.module.jmx.configuration.JmxServerConfiguration;
 import org.firehol.netdata.module.jmx.entity.MBeanQueryDimensionMapping;
 import org.firehol.netdata.module.jmx.entity.MBeanQueryInfo;
 import org.firehol.netdata.module.jmx.exception.JmxMBeanServerQueryException;
+import org.firehol.netdata.module.jmx.query.BoundMBeanMethodSingleArg;
+import org.firehol.netdata.module.jmx.query.DimensionUpdater;
+import org.firehol.netdata.module.jmx.query.DynamicMBeanQuery;
+import org.firehol.netdata.module.jmx.query.MBean;
+import org.firehol.netdata.module.jmx.query.MBeanAttribute;
+import org.firehol.netdata.module.jmx.query.MBeanMapperMethod;
+import org.firehol.netdata.module.jmx.query.MBeanNoArgMethod;
 import org.firehol.netdata.module.jmx.query.MBeanQuery;
+import org.firehol.netdata.module.jmx.query.MBeanQueryFunction;
+import org.firehol.netdata.module.jmx.query.MBeanSingleArgMethod;
+import org.firehol.netdata.module.jmx.query.MappingDimensionUpdater;
 import org.firehol.netdata.module.jmx.query.ThreadMXBeanQuery;
 import org.firehol.netdata.module.jmx.utils.MBeanServerUtils;
 import org.firehol.netdata.plugin.Collector;
@@ -66,9 +78,10 @@ import lombok.Getter;
  * 
  * @since 1.0.0
  * @author Simon Nagl
+ * @param <T>
  *
  */
-public class MBeanServerCollector implements Collector, Closeable {
+public class MBeanServerCollector<T> implements Collector, Closeable {
 
 	private final Logger log = Logger.getLogger("org.firehol.netdata.module.jmx");
 
@@ -79,7 +92,7 @@ public class MBeanServerCollector implements Collector, Closeable {
 
 	private JMXConnector jmxConnector;
 
-	private List<MBeanQuery<?, ?>> allMBeanQuery = new LinkedList<>();
+	private List<DimensionUpdater> allMBeanQuery = new LinkedList<>();
 
 	private List<Chart> allChart = new LinkedList<>();
 
@@ -178,11 +191,15 @@ public class MBeanServerCollector implements Collector, Closeable {
 				chart = createChart((JmxChartConfiguration) chartConfig);
 			} else if (chartConfig instanceof JmxDynamicChartConfiguration) {
 				JmxDynamicChartConfiguration dynamicChartConfig = (JmxDynamicChartConfiguration) chartConfig;
-				String from = dynamicChartConfig.getDimensionTemplate().getQueryParameter().getFrom();
-				if (ManagementFactory.THREAD_MXBEAN_NAME.equals(from)) {
+				if (dynamicChartConfig.getId().endsWith(
+						"_orig")/*
+								 * ManagementFactory.THREAD_MXBEAN_NAME.equals(
+								 * dynamicChartConfig.getDimensionTemplate().
+								 * getQueryParameter().getFrom())
+								 */) {
 					chart = createThreadChart(dynamicChartConfig);
 				} else {
-					throw new InitializationException("Unhandled dynamic 'from' field: " + from);
+					chart = createDynamicChart(dynamicChartConfig);
 				}
 			} else {
 				throw new InitializationException("Unhandled chart configuration type: " + chartConfig.getClass());
@@ -203,7 +220,7 @@ public class MBeanServerCollector implements Collector, Closeable {
 			chart.getAllDimension().add(dimension);
 
 			// Add to queryInfo
-			final MBeanQuery<?, ?> queryInfo;
+			final DimensionUpdater queryInfo;
 			try {
 				queryInfo = initializeMBeanQueryInfo(dimensionConfig);
 			} catch (JmxMBeanServerQueryException e) {
@@ -213,11 +230,15 @@ public class MBeanServerCollector implements Collector, Closeable {
 				continue;
 			}
 
-			Optional<MBeanQuery<?, ?>> foundQueryInfo = allMBeanQuery.stream()
-					.filter(presentQueryInfo -> presentQueryInfo.queryDestinationEquals(queryInfo))
-					.findAny();
+			Optional<DimensionUpdater> foundQueryInfo = queryInfo instanceof MBeanAttribute
+					? allMBeanQuery.stream()
+							.filter(presentQueryInfo -> presentQueryInfo instanceof MBeanAttribute
+									&& ((MBeanAttribute<?>) presentQueryInfo)
+											.queryDestinationEquals((MBeanAttribute<?>) queryInfo))
+							.findAny()
+					: Optional.empty();
 
-			MBeanQuery<?, ?> query;
+			DimensionUpdater query;
 			if (!foundQueryInfo.isPresent()) {
 				allMBeanQuery.add(queryInfo);
 				query = queryInfo;
@@ -228,7 +249,7 @@ public class MBeanServerCollector implements Collector, Closeable {
 			MBeanQueryDimensionMapping dimensionMapping = new MBeanQueryDimensionMapping();
 			dimensionMapping.setDimension(dimension);
 			dimensionMapping.setCompositeDataKey(dimensionConfig.getCompositeDataKey());
-			query.addDimension(dimensionMapping);
+			((MappingDimensionUpdater) query).addDimension(dimensionMapping);
 		}
 		return chart;
 	}
@@ -268,6 +289,47 @@ public class MBeanServerCollector implements Collector, Closeable {
 				return dimension;
 			});
 			allMBeanQuery.add(threadMXBeanQuery);
+		} catch (Exception e) {
+			throw new InitializationException("Failed to initialize thread chart " + chartConfig.getId(), e);
+		}
+		return chart;
+	}
+
+	@SuppressWarnings("unchecked")
+	private Chart createDynamicChart(JmxDynamicChartConfiguration chartConfig) throws InitializationException {
+		Chart chart = initializeChart(chartConfig);
+		try {
+			Predicate<String> nameFilter = compileObjectNameFilter(chartConfig.getDimensionTemplate().getNameQuery());
+			Function<String, String> nameRewriter = compileThreadNameRewrite(
+					chartConfig.getDimensionTemplate().getNameQuery());
+
+			MBeanQuery<Object> parameterQuery = (MBeanQuery<Object>) MBeanQueryFactory.buildQuery(mBeanServer,
+					chartConfig.getDimensionTemplate().getQueryParameter());
+			MBeanQueryFunction<Object, String> nameQueryFunction = (MBeanQueryFunction<Object, String>) MBeanQueryFactory
+					.buildQueryFunction(mBeanServer, chartConfig.getDimensionTemplate().getNameQuery());
+			MBeanQueryFunction<Object, Long> valueQueryFunction = (MBeanQueryFunction<Object, Long>) MBeanQueryFactory
+					.buildQueryFunction(mBeanServer, chartConfig.getDimensionTemplate().getValueQuery());
+			DynamicMBeanQuery<?> dynamicMBeanQuery = new DynamicMBeanQuery<Object>(parameterQuery, nameQueryFunction,
+					valueQueryFunction, (name) -> {
+						if (!nameFilter.test((String) name))
+							return null; // skip excluded
+
+						name = nameRewriter.apply((String) name);
+						final String dimensionId = sanitizeToDimensionId((String) name);
+
+						Dimension dimension = chart.getDimensionById(dimensionId);
+						if (dimension == null) {
+
+							log.fine("Adding new dimension " + name + " to " + chart.getType() + "." + chart.getId());
+							JmxDimensionConfiguration threadDimensionConfig = chartConfig.getDimensionTemplate()
+									.buildDimensionConfiguration((String) name);
+							dimension = initializeDimension(chartConfig, threadDimensionConfig);
+							dimension.setId(dimensionId);
+							chart.getAllDimension().add(dimension);
+						}
+						return dimension;
+					});
+			allMBeanQuery.add(dynamicMBeanQuery);
 		} catch (Exception e) {
 			throw new InitializationException("Failed to initialize thread chart " + chartConfig.getId(), e);
 		}
@@ -343,7 +405,7 @@ public class MBeanServerCollector implements Collector, Closeable {
 		return dimension;
 	}
 
-	protected MBeanQuery<?, ?> initializeMBeanQueryInfo(JmxQueryConfiguration queryConfig)
+	protected DimensionUpdater initializeMBeanQueryInfo(JmxQueryConfiguration queryConfig)
 			throws JmxMBeanServerQueryException {
 
 		// Query once to get dataType.
@@ -363,7 +425,7 @@ public class MBeanServerCollector implements Collector, Closeable {
 		queryInfo.setMBeanAttribute(queryConfig.getValue());
 		queryInfo.setMBeanAttributeExample(value);
 		queryInfo.setMBeanServer(mBeanServer);
-		MBeanQuery<?, ?> query = MBeanQueryFactory.build(queryInfo);
+		DimensionUpdater query = MBeanQueryFactory.build(queryInfo);
 
 		return query;
 	}
@@ -374,18 +436,16 @@ public class MBeanServerCollector implements Collector, Closeable {
 
 	public Collection<Chart> collectValues() {
 		// Query all attributes and fill charts.
-		Iterator<MBeanQuery<?, ?>> queryInfoIterator = allMBeanQuery.iterator();
+		Iterator<DimensionUpdater> queryInfoIterator = allMBeanQuery.iterator();
 
 		while (queryInfoIterator.hasNext()) {
-			MBeanQuery<?, ?> queryInfo = queryInfoIterator.next();
+			DimensionUpdater queryInfo = queryInfoIterator.next();
 
 			try {
-				queryInfo.query();
+				queryInfo.updateDimensionValues();
 			} catch (JmxMBeanServerQueryException e) {
 				// Stop collecting this value.
-				log.log(Level.WARNING, LoggingUtils.buildMessage(
-						"Stop collection value '" + queryInfo.getAttribute() + "' of '" + queryInfo.getName() + "'.",
-						e));
+				log.log(Level.WARNING, LoggingUtils.buildMessage("Stop collection of " + queryInfo + ".", e));
 				queryInfoIterator.remove();
 			}
 		}
@@ -406,7 +466,7 @@ public class MBeanServerCollector implements Collector, Closeable {
 		}
 	}
 
-	String sanitizeToDimensionId(String name) {
+	public static String sanitizeToDimensionId(String name) {
 		return BAD_CHAR.matcher(name).replaceAll("_");
 	}
 

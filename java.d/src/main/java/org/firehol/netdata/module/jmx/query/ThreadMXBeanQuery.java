@@ -34,7 +34,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class ThreadMXBeanQuery extends MBeanQuery<Object, ThreadMXBean> {
+public class ThreadMXBeanQuery implements MappingDimensionUpdater {
 
 	private final Logger log = Logger.getLogger("org.firehol.netdata.module.jmx");
 
@@ -51,25 +51,17 @@ public class ThreadMXBeanQuery extends MBeanQuery<Object, ThreadMXBean> {
 
 	private Map<Long, String> threadNameCache = new HashMap<>();
 
-	private ThreadMXBeanQuery(ObjectName name, String attribute, MBeanServerConnection mBeanServer)
+	private String attribute;
+
+	public ThreadMXBeanQuery(MBean<ThreadMXBean> threadMXBean, String attribute)
 			throws InstanceNotFoundException, IOException {
-		super(name, attribute, mBeanServer, Object.class, ThreadMXBean.class);
-		this.threadMXBean = newMXBeanProxy();
+		this(threadMXBean.newMXBeanProxy(), attribute);
 	}
 
-	/**
-	 * For testing only.
-	 * 
-	 * @deprecated use {@link #getInstance(String, MBeanServerConnection)}
-	 *             instead
-	 */
-	@Deprecated
-	ThreadMXBeanQuery(ObjectName name, String attribute, MBeanServerConnection mBeanServer, ThreadMXBean threadMXBean) { // NOPMD
-																														 // exposed
-																														 // for
-																														 // testing
-		super(name, attribute, mBeanServer, Object.class, ThreadMXBean.class);
+	public ThreadMXBeanQuery(ThreadMXBean threadMXBean, String attribute)
+			throws InstanceNotFoundException, IOException {
 		this.threadMXBean = threadMXBean;
+		this.attribute = attribute;
 	}
 
 	private void ensureAllPerThreadFunctionsInitialized() throws InitializationException {
@@ -127,7 +119,8 @@ public class ThreadMXBeanQuery extends MBeanQuery<Object, ThreadMXBean> {
 			if (!hasThreadMXBeans) {
 				throw new InitializationException("JMX connection has no ThreadMXBean");
 			}
-			ThreadMXBeanQuery threadMXBeanQuery = new ThreadMXBeanQuery(name, attribute, mBeanServer);
+			ThreadMXBeanQuery threadMXBeanQuery = new ThreadMXBeanQuery(
+					new MBean<>(name, mBeanServer, ThreadMXBean.class), attribute);
 			threadMXBeanQuery.ensureAllPerThreadFunctionsInitialized();
 			if (!threadMXBeanQuery.perThreadFunctionsByAttribute.containsKey(attribute)) {
 				throw new InitializationException("Unhandled thread 'value' field: " + attribute + " (available: "
@@ -153,7 +146,8 @@ public class ThreadMXBeanQuery extends MBeanQuery<Object, ThreadMXBean> {
 		this.dimensions.add(queryInfo.getDimension());
 	}
 
-	public void query() throws JmxMBeanServerQueryException {
+	@Override
+	public void updateDimensionValues() throws JmxMBeanServerQueryException {
 		if (getThreadMXBean() == null) {
 			throw new JmxMBeanServerQueryException("Cannot get data for chart without a ThreadMXBean");
 		} else {

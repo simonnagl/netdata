@@ -1,9 +1,13 @@
 package org.firehol.netdata.module.jmx.configuration;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 /**
  * Configuration scheme of a JMX property queried by the
@@ -11,6 +15,7 @@ import lombok.Setter;
  */
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 @Getter
 @Setter
 public class JmxQueryConfiguration {
@@ -29,5 +34,7 @@ public class JmxQueryConfiguration {
 	 * from it.
 	 */
 	private String compositeDataKey;
+
+	private List<JmxQueryResultTransformationConfiguration> transform = new ArrayList<>();
 
 }
